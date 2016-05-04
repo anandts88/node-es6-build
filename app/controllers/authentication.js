@@ -54,7 +54,7 @@ function authenticate(req, res, next) {
 
         next();
       })
-      .error((err) => {
+      .catch((err) => {
         next(err);
       });
 

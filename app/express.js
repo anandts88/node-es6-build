@@ -66,7 +66,7 @@ passport.use(new Strategy(jwtOptions, (payload, callback) => {
     .then((user) => {
       callback(undefined, user);
     })
-    .error((err) => {
+    .catch((err) => {
       callback(err);
     });
 }));

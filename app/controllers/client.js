@@ -16,7 +16,7 @@ function post(req, res, next) {
     .then((user) => {
       res.json({ user });
     })
-    .error((err) => {
+    .catch((err) => {
       next(err);
     });
 }
