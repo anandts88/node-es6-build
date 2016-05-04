@@ -69,6 +69,7 @@ function login(req, res, next) {
 function logout(req, res) {
   req.logout();
   req.session.destroy();
+  delete req.session;
   res.statusCode = httpStatus.NO_CONTENT;
   res.end();
 }

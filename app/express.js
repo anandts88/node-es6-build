@@ -18,8 +18,15 @@ import connection from './database';
 const app = express();
 const MongoStore = connectMongo(session);
 const { Strategy, ExtractJwt } = passportJwt;
+const {
+  env,
+  secretKey,
+  sessionId,
+  sessionTimeout,
+  authTokenHeader
+} = environment;
 
-if (environment.env === 'development') {
+if (env === 'development') {
   app.use(logger('dev'));
 }
 
@@ -34,16 +41,16 @@ app.use(cookieParser());
 
 winstonInstance.info('Initializing Session');
 app.use(session({
-  secret: environment.secretKey,
+  secret: secretKey,
 	resave: false,
 	saveUninitialized: false,
-	name: environment.sessionId,
+	name: sessionId,
 	cookie: {
 		// secure: true, // This works for https connections only.
 		ephemeral: true, // Delete cookie when browser is closed.
 		httpOnly: true, // Prevents browser javascript from accessing cookies.
-		expires: new Date(Date.now() + 3600000),
-		maxAge: 3600000
+		expires: new Date(Date.now() + sessionTimeout),
+		maxAge: sessionTimeout
 	},
 	store: new MongoStore({ mongooseConnection: connection })
 }));
@@ -55,8 +62,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 const jwtOptions = {
-  jwtFromRequest: ExtractJwt.fromAuthHeader(environment.authTokenHeader),
-  secretOrKey: environment.secretKey
+  jwtFromRequest: ExtractJwt.fromAuthHeader(authTokenHeader),
+  secretOrKey: secretKey
 };
 
 passport.use(new Strategy(jwtOptions, (payload, callback) => {
@@ -72,7 +79,7 @@ passport.use(new Strategy(jwtOptions, (payload, callback) => {
 }));
 
 // enable detailed API logging in dev env
-if (environment.env === 'development') {
+if (env === 'development') {
 	expressWinston.requestWhitelist.push('body');
 	expressWinston.responseWhitelist.push('body');
 	app.use(expressWinston.logger({
@@ -121,7 +128,7 @@ app.use((err, req, res) => {
   winstonInstance.error(err.Status);
 	res.status(err.status).json({
 		message: err.isPublic ? err.message : httpStatus[err.status],
-		stack: environment.env === 'development' ? err.stack : {}
+		stack: env === 'development' ? err.stack : {}
 	});
 });
 

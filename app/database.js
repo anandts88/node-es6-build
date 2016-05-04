@@ -4,6 +4,8 @@ import autoIncrement from 'mongoose-auto-increment';
 import environment from './config/environment';
 import winston from './config/winston';
 
+const { db, dbTimeout, dbPoolSize } = environment;
+
 // promisify mongoose
 Promise.promisifyAll(mongoose);
 mongoose.Promise = Promise;
@@ -11,16 +13,24 @@ mongoose.Promise = Promise;
 winston.info('Creating database connection.');
 
 // connect to mongo db
-const connection = mongoose.createConnection(environment.db, {
+const connection = mongoose.createConnection(db, {
   server: {
-    socketOptions: { keepAlive: 1 }
+    socketOptions: {
+      keepAlive: dbTimeout,
+      connectTimeoutMS: dbTimeout
+    },
+
+    replset: {
+      keepAlive: dbTimeout,
+      connectTimeoutMS: dbTimeout
+    }
   },
-  poolSize: 5
+  poolSize: dbPoolSize
 });
 
 connection.on('error', () => {
   winston.info('Problem creating connection to database.');
-  throw new Error(`Not able to connect to database: ${environment.db}`);
+  throw new Error(`Not able to connect to database: ${db}`);
 });
 
 connection.once('open', function() {
