@@ -11,11 +11,14 @@ function post(req, res, next) {
 
   const user = new User({ userName, password, role });
 
-  userService.save().then((user) => {
-    res.json({ user });
-  }).error((err) => {
-    next(err);
-  });
+  userService
+    .save(user)
+    .then((user) => {
+      res.json({ user });
+    })
+    .error((err) => {
+      next(err);
+    });
 }
 
 export default { post };

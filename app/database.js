@@ -4,9 +4,6 @@ import autoIncrement from 'mongoose-auto-increment';
 import environment from './config/environment';
 import winston from './config/winston';
 
-let connection;
-let gracefulExit;
-
 // promisify mongoose
 Promise.promisifyAll(mongoose);
 mongoose.Promise = Promise;
@@ -14,7 +11,7 @@ mongoose.Promise = Promise;
 winston.info('Creating database connection.');
 
 // connect to mongo db
-connection = mongoose.createConnection(environment.db, {
+const connection = mongoose.createConnection(environment.db, {
   server: {
     socketOptions: { keepAlive: 1 }
   },
@@ -26,11 +23,11 @@ connection.on('error', () => {
   throw new Error(`Not able to connect to database: ${environment.db}`);
 });
 
-connection.once('open', function () {
+connection.once('open', function() {
   winston.info('Database connection established!');
 });
 
-gracefulExit = () => {
+const gracefulExit = () => {
   connection.close(() => {
     winston.info('Closing database connection.');
     process.exit(0);

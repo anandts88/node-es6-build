@@ -11,54 +11,62 @@ function login(req, res, next) {
 
   winston.info('Performing Login');
 
-  User.findOne({ userName }).exec().then((user) => {
-    const { role } = user;
+  User
+    .findOne({ userName })
+    .exec()
+    .then((user) => {
+      const { role } = user;
 
-    winston.info('Performing Login');
-    if (!user) {
-      winston.error('Authentication Fails');
-      return next(new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
-    }
+      winston.info('Performing Login');
+      if (!user) {
+        winston.error('Authentication Fails');
 
-    winston.info('Comparing password');
-    user.comparePassword(password, (err, matched) => {
-      let expires;
-      let token;
-
-      // If password not matched.
-      if (err || !matched) {
-        winston.error('Password not matched');
         return next(new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
       }
 
-      winston.info('Password matched');
-      expires = moment().add(1, 'days').valueOf();
+      winston.info('Comparing password');
+      user.comparePassword(password, (err, matched) => {
+        let expires;
+        let token;
 
-      winston.info('Creating token');
-      token = jwtSimple.encode({ userName, expires }, environment.secretKey);
+        // If password not matched.
+        if (err || !matched) {
+          winston.error('Password not matched');
 
-      // Set token in session
-      req.session.token = token;
-      req.session.user = user;
+          return next(new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
+        }
 
-      winston.info(`Send token ${token}`);
+        winston.info('Password matched');
+        expires = moment()
+          .add(1, 'days')
+          .valueOf();
 
-      // Send token back.
-      res.setHeader(environment.authTokenHeader, token);
+        winston.info('Creating token');
+        token = jwtSimple.encode({ userName, expires }, environment.secretKey);
 
-      winston.info('Sending response');
-      res.json({
-        session: { userName, role }
+        // Set token in session
+        req.session.token = token;
+        req.session.user = user;
+
+        winston.info(`Send token ${token}`);
+
+        // Send token back.
+        res.setHeader(environment.authTokenHeader, token);
+
+        winston.info('Sending response');
+        res.json({
+          session: { userName, role }
+        });
       });
-    });
 
-  }).error(() => {
-    winston.error('Authentication Fails');
-    next(new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
-  });
+    })
+    .error(() => {
+      winston.error('Authentication Fails');
+      next(new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
+    });
 }
 
-function logout (req, res) {
+function logout(req, res) {
   req.logout();
   req.session.destroy();
   res.statusCode = httpStatus.NO_CONTENT;

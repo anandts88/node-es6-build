@@ -18,7 +18,6 @@ import connection from './database';
 const app = express();
 const MongoStore = connectMongo(session);
 const { Strategy, ExtractJwt } = passportJwt;
-let jwtOptions;
 
 if (environment.env === 'development') {
   app.use(logger('dev'));
@@ -35,7 +34,7 @@ app.use(cookieParser());
 
 winstonInstance.info('Initializing Session');
 app.use(session({
-	secret: environment.secretKey,
+  secret: environment.secretKey,
 	resave: false,
 	saveUninitialized: false,
 	name: environment.sessionId,
@@ -55,17 +54,21 @@ winstonInstance.info('Initializing Passport');
 app.use(passport.initialize());
 app.use(passport.session());
 
-jwtOptions = {
+const jwtOptions = {
   jwtFromRequest: ExtractJwt.fromAuthHeader(environment.authTokenHeader),
   secretOrKey: environment.secretKey
 };
 
 passport.use(new Strategy(jwtOptions, (payload, callback) => {
-  user.findOne({ id: payload.id }).exec().then((user) => {
-    callback(undefined, user);
-  }).error((err) => {
-    callback(err);
-  });
+  user
+    .findOne({ id: payload.id })
+    .exec()
+    .then((user) => {
+      callback(undefined, user);
+    })
+    .error((err) => {
+      callback(err);
+    });
 }));
 
 // enable detailed API logging in dev env
@@ -74,9 +77,12 @@ if (environment.env === 'development') {
 	expressWinston.responseWhitelist.push('body');
 	app.use(expressWinston.logger({
 		winstonInstance,
-		meta: true, 	// optional: log meta data about request (defaults to true)
-		msg: 'HTTP {{req.method}} {{req.url}} {{res.statusCode}} {{res.responseTime}}ms',
-		colorStatus: true 	// Color the status code (default green, 3XX cyan, 4XX yellow, 5XX red).
+    // optional: log meta data about request (defaults to true)
+		meta: true,
+		msg: `HTTP {{req.method}} {{req.url}}
+      {{res.statusCode}} {{res.responseTime}}ms`,
+    // Color the status code (default green, 3XX cyan, 4XX yellow, 5XX red).
+		colorStatus: true
 	}));
 }
 
@@ -95,8 +101,10 @@ app.use((err, req, res, next) => {
   winstonInstance.error('Global Error');
 	if (!(err instanceof ApiError)) {
 		const apiError = new ApiError(err.message, err.status, err.isPublic);
+
 		return next(apiError);
 	}
+
 	return next(err);
 });
 
@@ -104,6 +112,7 @@ app.use((err, req, res, next) => {
 app.use((req, res, next) => {
   winstonInstance.error('Page Not found');
 	const err = new ApiError('Page Not Found', httpStatus.NOT_FOUND);
+
 	return next(err);
 });
 

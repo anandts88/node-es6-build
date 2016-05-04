@@ -3,9 +3,9 @@ import connection from '../database';
 import autoIncrement from 'mongoose-auto-increment';
 import bcrypt from 'bcrypt';
 
-var Schema    = mongoose.Schema;
+const Schema = mongoose.Schema;
 
-var UserSchema = new Schema({
+const UserSchema = new Schema({
   userName: {
     type: String,
     unique: true,

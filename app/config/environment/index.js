@@ -1,5 +1,5 @@
 import path from 'path';
-import _ from 'lodash';
+import loadsh from 'lodash';
 
 const environment = process.env.NODE_ENV || 'development';
 const config = require(`./${environment}`);
@@ -12,6 +12,6 @@ const defaults = {
 	authTokenHeader: 'node-auth-token'
 };
 
-_.assign(config, defaults);
+loadsh.assign(config, defaults);
 
 export default config;

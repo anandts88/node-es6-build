@@ -11,42 +11,52 @@ function authenticate(req, res, next) {
   let userName;
 
   if (!tokenHeader) {
-    return next(new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
+    return next(
+      new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
   }
 
   try {
 
     if (tokenHeader !== sessionToken) {
-      return next(new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
+      return next(
+        new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
     }
 
     token = jwtSimple.decode(tokenHeader, environment.secretKey);
 
     if (token.expires <= Date.now()) {
-			return next(new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
+			return next(
+        new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
 		}
 
     userName = token.userName;
 
     if (!userName) {
-      return next(new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
+      return next(
+        new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
     }
 
     if (req.session.user.userName !== userName) {
-      return next(new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
+      return next(
+        new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
     }
 
-    User.findOne({ userName }).exec().then((user) => {
-      if (!user) {
-        return next(new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
-      }
+    User
+      .findOne({ userName })
+      .exec()
+      .then((user) => {
+        if (!user) {
+          return next(
+            new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
+        }
 
-      next();
-    }).error((err) => {
-      next(err);
-    });
+        next();
+      })
+      .error((err) => {
+        next(err);
+      });
 
-  } catch(err) {
+  } catch (err) {
     return next(new ApiError('Authentication fails', httpStatus.UNAUTHORIZED));
   }
 }

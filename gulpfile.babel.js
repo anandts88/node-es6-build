@@ -3,14 +3,6 @@ var gulpLoadPlugins = require('gulp-load-plugins');
 var runSequence     = require('run-sequence');
 var path            = require('path');
 var del             = require('del');
-var jshint          = require('gulp-jshint');
-var jscs            = require('gulp-jscs');
-var jscsStylish     = require('gulp-jscs-stylish');
-var livereload      = require('gulp-livereload');
-var notify          = require('gulp-notify');
-var changed         = require('gulp-changed');
-var nodemon         = require('gulp-nodemon');
-
 // Load Gulp plugins
 var plugins = gulpLoadPlugins();
 
@@ -32,23 +24,22 @@ function _copy(source, destination) {
 
 function _jshint(path) {
   return gulp.src(path)
-    .pipe(changed(paths.destination))
-    .pipe(jshint())
-    .pipe(jshint.reporter('jshint-stylish'));
+    .pipe(plugins.changed(paths.destination))
+    .pipe(plugins.jshint())
+    .pipe(plugins.jshint.reporter('jshint-stylish'));
 }
 
-function _jscs(path) {
+function _eslint(path) {
   return gulp.src(path)
-    .pipe(jshint())
-    .pipe(jscs())
-    .pipe(jscsStylish.combineWithHintResults())
-    .pipe(jscs.reporter());
+    .pipe(plugins.changed(paths.destination))
+    .pipe(plugins.eslint())
+    .pipe(plugins.eslint.format());
 }
 
 function _babel(path, destination) {
   return gulp.src(path, { base: 'app' })
 		.pipe(plugins.newer(destination))
-    .pipe(changed(paths.destination))
+    .pipe(plugins.changed(paths.destination))
 		// .pipe(plugins.sourcemaps.init())
 		.pipe(plugins.babel())
 		/*.pipe(plugins.sourcemaps.write('.', {
@@ -71,10 +62,15 @@ gulp.task('copy-non-js', function() {
   return _copy(paths.nonJsFiles, paths.destination);
 });
 
-// Lint Javascript
+// JSHint Javascript
 gulp.task('jshint', function() {
 	return _jshint(paths.jsFiles);
 });
+
+// ESLINT Javascript
+gulp.task('eslint', function() {
+  return _eslint(paths.jsFiles);
+})
 
 // Lint Javascript
 gulp.task('jscs', function () {
@@ -88,23 +84,23 @@ gulp.task('babel', function() {
 
 // Start server with restart on file changes
 gulp.task('nodemon', function() {
-	return nodemon({
+	return plugins.nodemon({
 		script: path.join('dist', 'index.js'),
 		ext: 'js',
 		ignore: ['node_modules/**/*.js', 'dist/**/*.js'],
-		tasks: ['jshint', 'copy-non-js', 'babel'],
+		tasks: ['jshint', 'eslint', 'copy-non-js', 'babel'],
     env: { 'NODE_ENV': 'development' }
 	});
 });
 
 // gulp serve for development
 gulp.task('serve', function(cb) {
-  runSequence('clean', 'jshint', 'copy-non-js', 'babel', 'nodemon', cb);
+  runSequence('clean', 'jshint', 'eslint', 'copy-non-js', 'babel', 'nodemon', cb);
 });
 
 // default task: clean dist, compile js files using babel and copy non-js files into dist.
 gulp.task('default', ['clean'], function() {
 	runSequence(
-		['jshint', 'copy-non-js', 'babel']
+		['jshint', 'eslint', 'copy-non-js', 'babel']
 	);
 });
