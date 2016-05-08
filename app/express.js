@@ -1,9 +1,9 @@
 import express from 'express';
+import expressValidator from 'express-validator';
 import passport from 'passport';
 import logger from 'morgan';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
-import expressWinston from 'express-winston';
 import session from 'express-session';
 import connectMongo from 'connect-mongo';
 import httpStatus from 'http-status';
@@ -11,6 +11,7 @@ import passportJwt from 'passport-jwt';
 import environment from './config/environment';
 import winstonInstance from './config/winston';
 import ApiError from './errors/api-error';
+import ValidationError from './errors/validation-error';
 import routes from './routes';
 import user from './models/user';
 import connection from './database';
@@ -35,6 +36,7 @@ winstonInstance.info('Initializing Body Parser');
 // this will let us get the data from a POST
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(expressValidator());
 
 winstonInstance.info('Initializing Cookie Parser');
 app.use(cookieParser());
@@ -78,21 +80,6 @@ passport.use(new Strategy(jwtOptions, (payload, callback) => {
     });
 }));
 
-// enable detailed API logging in dev env
-if (env === 'development') {
-	expressWinston.requestWhitelist.push('body');
-	expressWinston.responseWhitelist.push('body');
-	app.use(expressWinston.logger({
-		winstonInstance,
-    // optional: log meta data about request (defaults to true)
-		meta: true,
-		msg: `HTTP {{req.method}} {{req.url}}
-      {{res.statusCode}} {{res.responseTime}}ms`,
-    // Color the status code (default green, 3XX cyan, 4XX yellow, 5XX red).
-		colorStatus: true
-	}));
-}
-
 winstonInstance.info('Initializing /node-auth routes');
 
 app.use((req, res, next) => {
@@ -105,8 +92,9 @@ app.use('/node-auth', routes);
 
 // if error is not an instanceOf APIError, convert it.
 app.use((err, req, res, next) => {
-  winstonInstance.error('Global Error');
-	if (!(err instanceof ApiError)) {
+  if (err instanceof ValidationError) {
+    return res.status(err.status).json({ errors: err.validations });
+  } else if (!(err instanceof ApiError)) {
 		const apiError = new ApiError(err.message, err.status, err.isPublic);
 
 		return next(apiError);
@@ -125,11 +113,14 @@ app.use((req, res, next) => {
 
 // error handler, send stacktrace only during development
 app.use((err, req, res) => {
-  winstonInstance.error(err.Status);
-	res.status(err.status).json({
-		message: err.isPublic ? err.message : httpStatus[err.status],
-		stack: env === 'development' ? err.stack : {}
-	});
+  res.status(err.status).json({
+    errors: [
+      {
+        message: err.isPublic ? err.message : httpStatus[err.status],
+        stack: env === 'development' ? err.stack : {}
+      }
+    ]
+  });
 });
 
 export default app;

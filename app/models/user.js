@@ -3,7 +3,8 @@ import connection from '../database';
 import autoIncrement from 'mongoose-auto-increment';
 import bcrypt from 'bcrypt';
 
-const Schema = mongoose.Schema;
+const { Schema } = mongoose;
+const { ObjectId } = Schema;
 
 const UserSchema = new Schema({
   userName: {
@@ -20,10 +21,20 @@ const UserSchema = new Schema({
     trim: true
   },
 
+  passwordChanged: {
+    type: Boolean,
+    default: false
+  },
+
   role: {
     type: String,
     required: true,
     enum: [ 'Admin', 'Staff', 'Client', 'Doctor', 'Assessor', 'Nurse']
+  },
+
+  client: {
+    type: ObjectId,
+    ref: 'Client'
   },
 
   createdAt: {
@@ -34,7 +45,7 @@ const UserSchema = new Schema({
   lastLogin: {
     type: Date
   }
-});
+}, { strict: false });
 
 /**
  * Add your

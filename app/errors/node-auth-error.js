@@ -9,7 +9,11 @@ class NodeAuthError extends Error {
 		this.status = status;
 		this.isPublic = isPublic;
 		this.isOperational = true;	// This is required since bluebird 4 doesn't append it anymore.
-		Error.captureStackTrace(this, this.constructor.name);
+		if (typeof Error.captureStackTrace === 'function') {
+			Error.captureStackTrace(this, this.constructor.name);
+		} else {
+			this.stack = (new Error(message)).stack;
+		}
 	}
 }
 
