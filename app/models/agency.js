@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import autoIncrement from 'mongoose-auto-increment';
+import mongooseHidden from 'mongoose-hidden';
 import connection from '../database';
 
 const { Schema } = mongoose;
@@ -34,15 +35,10 @@ AgencySchema.pre('update', function(next) {
   next();
 });
 
-// specify the user schema option
-if (!AgencySchema.options.toObject) {
-  AgencySchema.options.toObject = { virtuals: true };
-}
-
-// Takes 3 arguments (doc, ret, options)
-AgencySchema.options.toObject.transform = (doc, ret) => {
-  // remove __v of every document before returning the result
-  delete ret.__v;
-};
+AgencySchema.plugin(mongooseHidden, {
+  defaultHidden: {
+    __v: true
+  }
+});
 
  export default connection.model('Agency', AgencySchema);

@@ -92,15 +92,19 @@ app.use('/node-auth', routes);
 
 // if error is not an instanceOf APIError, convert it.
 app.use((err, req, res, next) => {
+  winstonInstance.error(`On Error ${JSON.stringify(err)}`);
   if (err instanceof ValidationError) {
-    return res.status(err.status).json({ errors: err.validations });
-  } else if (!(err instanceof ApiError)) {
-		const apiError = new ApiError(err.message, err.status, err.isPublic);
+    return res.status(err.status).json(err.validations);
+  }
 
-		return next(apiError);
-	}
-
-	return next(err);
+  res.status(err.status).json({
+    errors: [
+      {
+        id: err.id || 500,
+        message: err.message
+      }
+    ]
+  });
 });
 
 // catch 404 and forward to error handler
@@ -111,16 +115,5 @@ app.use((req, res, next) => {
 	return next(err);
 });
 
-// error handler, send stacktrace only during development
-app.use((err, req, res) => {
-  res.status(err.status).json({
-    errors: [
-      {
-        message: err.isPublic ? err.message : httpStatus[err.status],
-        stack: env === 'development' ? err.stack : {}
-      }
-    ]
-  });
-});
 
 export default app;

@@ -1,6 +1,7 @@
 import Agency from '../models/agency';
 import agencyService from '../services/agency';
 import ValidationError from '../errors/validation-error';
+import SqlError from '../errors/sql-error';
 import winstonInstance from '../config/winston';
 
 function post(req, res, next) {
@@ -29,7 +30,7 @@ function post(req, res, next) {
         res.json({ agency });
       })
       .catch((err) => {
-        next(err);
+        next(new SqlError(err));
       });
   }
 }
