@@ -7,6 +7,7 @@ var del             = require('del');
 var plugins = gulpLoadPlugins();
 
 var paths = {
+  baseDir: 'app',
   jsFiles: './app/**/*.js',
   nonJsFiles: ['./package.json'],
   destination: 'dist'
@@ -36,18 +37,18 @@ function _eslint(path) {
     .pipe(plugins.eslint.format());
 }
 
-function _babel(path, destination) {
-  return gulp.src(path, { base: 'app' })
+function _babel(source, destination) {
+  return gulp.src(source, { base: paths.baseDir })
 		.pipe(plugins.newer(destination))
     .pipe(plugins.changed(paths.destination))
-		// .pipe(plugins.sourcemaps.init())
+		.pipe(plugins.sourcemaps.init())
 		.pipe(plugins.babel())
-		/*.pipe(plugins.sourcemaps.write('.', {
-			includeContent: false,
-			sourceRoot: function(file) {
-				return path.relative(file.path, __dirname);
-			}
-		}))*/
+    .pipe(plugins.sourcemaps.write('.', {
+      includeContent: false,
+      sourceRoot: function(file) {
+        return file.cwd + '/' + paths.baseDir;
+      }
+    }))
 		.pipe(gulp.dest(destination));
 
 }
@@ -86,6 +87,7 @@ gulp.task('babel', function() {
 gulp.task('nodemon', function() {
 	return plugins.nodemon({
 		script: path.join('dist', 'index.js'),
+    exec: 'node-inspector & node --debug',
 		ext: 'js',
 		ignore: ['node_modules/**/*.js', 'dist/**/*.js'],
 		tasks: ['jshint', 'eslint', 'copy-non-js', 'babel'],
