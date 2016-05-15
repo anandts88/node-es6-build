@@ -1,5 +1,4 @@
 import express from 'express';
-import expressValidator from 'express-validator';
 import passport from 'passport';
 import logger from 'morgan';
 import bodyParser from 'body-parser';
@@ -11,7 +10,8 @@ import passportJwt from 'passport-jwt';
 import environment from './config/environment';
 import winstonInstance from './config/winston';
 import ApiError from './errors/api-error';
-import ValidationError from './errors/validation-error';
+import JoiError from './errors/joi-error';
+import SqlError from './errors/sql-error';
 import routes from './routes';
 import user from './models/user';
 import connection from './database';
@@ -36,7 +36,6 @@ winstonInstance.info('Initializing Body Parser');
 // this will let us get the data from a POST
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(expressValidator());
 
 winstonInstance.info('Initializing Cookie Parser');
 app.use(cookieParser());
@@ -91,13 +90,18 @@ app.use((req, res, next) => {
 app.use('/node-auth', routes);
 
 // if error is not an instanceOf APIError, convert it.
-app.use((err, req, res, next) => {
+app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   winstonInstance.error(`On Error ${JSON.stringify(err)}`);
-  if (err instanceof ValidationError) {
+
+  if (err instanceof JoiError) {
     return res.status(err.status).json(err.validations);
   }
 
-  res.status(err.status).json({
+  if (err instanceof SqlError) {
+    return res.status(err.status).json(err.errors);
+  }
+
+  return res.status(err.status).json({
     errors: [
       {
         id: err.id || 500,

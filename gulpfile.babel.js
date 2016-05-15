@@ -90,19 +90,19 @@ gulp.task('nodemon', function() {
     exec: 'node-inspector & node --debug',
 		ext: 'js',
 		ignore: ['node_modules/**/*.js', 'dist/**/*.js'],
-		tasks: ['jshint', 'eslint', 'copy-non-js', 'babel'],
+		tasks: ['eslint', 'copy-non-js', 'babel'],
     env: { 'NODE_ENV': 'development' }
 	});
 });
 
 // gulp serve for development
 gulp.task('serve', function(cb) {
-  runSequence('clean', 'jshint', 'eslint', 'copy-non-js', 'babel', 'nodemon', cb);
+  runSequence('clean', 'eslint', 'copy-non-js', 'babel', 'nodemon', cb);
 });
 
 // default task: clean dist, compile js files using babel and copy non-js files into dist.
 gulp.task('default', ['clean'], function() {
 	runSequence(
-		['jshint', 'eslint', 'copy-non-js', 'babel']
+		['eslint', 'copy-non-js', 'babel']
 	);
 });

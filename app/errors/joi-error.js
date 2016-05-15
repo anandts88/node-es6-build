@@ -4,16 +4,18 @@ import lodash from 'lodash';
 
 const { BAD_REQUEST } = httpStatus;
 
-class ValidationError extends ExtendableError {
+class JoiError extends ExtendableError {
 
 	constructor(errors = [], status = BAD_REQUEST) {
+    const { details } = errors;
 		let _errors;
 
-		super('Validation Error');
+		super('Joi Validation Error');
     this.status = status;
 
-		_errors = lodash.map(errors, (error, index) => {
+		_errors = lodash.map(details, (error, index) => {
 			error.id = index;
+      delete error.context;
 
 			return error;
 		});
@@ -22,4 +24,4 @@ class ValidationError extends ExtendableError {
 	}
 }
 
-export default ValidationError;
+export default JoiError;

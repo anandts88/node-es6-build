@@ -2,6 +2,9 @@ import mongoose from 'mongoose';
 import autoIncrement from 'mongoose-auto-increment';
 import mongooseHidden from 'mongoose-hidden';
 import connection from '../database';
+import constants from '../utility/constants';
+
+const { GENDERS } = constants;
 
 const { Schema } = mongoose;
 
@@ -29,7 +32,7 @@ const AdminSchema = new Schema({
     type: String,
     required: true,
     trim: true,
-    enum: [ 'Male', 'Female', 'Other']
+    enum: GENDERS
   },
 
   ssn: {

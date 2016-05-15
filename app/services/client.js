@@ -1,7 +1,5 @@
 function save(client) {
-  user.agency = '';
-
-  return agency.save();
+  return client.save();
 }
 
 export default { save };
