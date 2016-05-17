@@ -245,7 +245,19 @@ if (!UserSchema.options.toJSON) {
 
 UserSchema.options.toJSON.transform = (doc, ret) => {
   // remove the _id of every document before returning the result
+  delete ret.password;
   delete ret.__v;
 };
+
+if (!UserSchema.options.toObject) {
+  UserSchema.options.toObject = {};
+}
+
+UserSchema.options.toObject.transform = (doc, ret) => {
+  // remove the _id of every document before returning the result
+  delete ret.password;
+  delete ret.__v;
+};
+
 
 export default connection.model('User', UserSchema);
